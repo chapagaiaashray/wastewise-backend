@@ -1,14 +1,20 @@
-# Use the official OpenJDK image
-FROM eclipse-temurin:17-jdk-alpine
+# Start from an official JDK image
+FROM eclipse-temurin:17-jdk
 
 # Set working directory
 WORKDIR /app
 
-# Copy the backend project
+# Copy Maven wrapper and project files
 COPY . .
 
-# Build the app
+# Give execution permission to Maven wrapper
+RUN chmod +x ./mvnw
+
+# Build the application
 RUN ./mvnw clean install
 
-# Start the Spring Boot app
+# Expose port
+EXPOSE 8080
+
+# Run the Spring Boot application
 CMD ["./mvnw", "spring-boot:run"]
