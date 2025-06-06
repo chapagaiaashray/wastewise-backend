@@ -3,7 +3,9 @@ package com.aashray.backend.model;
 import java.io.Serializable;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "bins")
 public class BinEntity implements Serializable {

@@ -5,6 +5,7 @@ com/aashray/backend/controller/WebSocketController.class
 com/aashray/backend/config/SecurityConfig.class
 com/aashray/backend/BackendApplication.class
 com/aashray/backend/config/RedisConfig.class
+com/aashray/backend/service/BinSimulatorService.class
 com/aashray/backend/config/WebMvcPathConfig.class
 com/aashray/backend/controller/HealthController.class
 com/aashray/backend/model/BinEntity.class
