@@ -14,12 +14,23 @@ public class BinEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "location_name")
     private String locationName;
+
+    @Column(name = "latitude")
     private double latitude;
+
+    @Column(name = "longitude")
     private double longitude;
-    private double fillLevel; // e.g., 72.5 (%)
-    private String type; // "Recyclable", "Organic", etc.
-    private String status; // "OK", "FULL", "OVERFLOW"
+
+    @Column(name = "fill_level")
+    private double fillLevel;
+
+    @Column(name = "type")
+    private String type;
+
+    @Column(name = "status")
+    private String status;
 
     // Constructors
     public BinEntity() {}
