@@ -14,7 +14,10 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of("http://localhost:5173")); // ✅ frontend port
+        config.setAllowedOrigins(List.of(
+            "http://localhost:5173",
+            "https://wastewise-sewanee.netlify.app"
+        ));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("*"));
 
