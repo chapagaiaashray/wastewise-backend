@@ -15,11 +15,11 @@ import java.util.Optional;
 public class BinController {
 
     private final BinRepository binRepository;
-    private final RedisService redisService;
+    private final RedisService redisService;  // optional, may be null
 
+    // Allow RedisService to be optional
     @Autowired
-    public BinController(BinRepository binRepository,
-                         @Autowired(required = false) RedisService redisService) {
+    public BinController(BinRepository binRepository, @Autowired(required = false) RedisService redisService) {
         this.binRepository = binRepository;
         this.redisService = redisService;
     }
@@ -28,48 +28,51 @@ public class BinController {
     public List<BinEntity> getAllBins() {
         List<BinEntity> dbBins = binRepository.findAll();
 
-        // Cache each bin individually if Redis is available
         if (redisService != null) {
-            dbBins.forEach(bin -> redisService.saveBin(bin.getId(), bin));
+            for (BinEntity bin : dbBins) {
+                redisService.saveBin(bin.getId(), bin);
+            }
         }
 
         return dbBins;
     }
 
     @GetMapping("/{id}")
-    public BinEntity getBinById(@PathVariable Long id) {
+    public ResponseEntity<BinEntity> getBinById(@PathVariable Long id) {
+        // Try Redis cache
         if (redisService != null) {
             BinEntity cached = redisService.getBin(id);
-            if (cached != null) return cached;
+            if (cached != null) return ResponseEntity.ok(cached);
         }
 
+        // Fallback to DB
         Optional<BinEntity> dbBin = binRepository.findById(id);
-        dbBin.ifPresent(bin -> {
+        if (dbBin.isPresent()) {
             if (redisService != null) {
-                redisService.saveBin(id, bin);
+                redisService.saveBin(id, dbBin.get());
             }
-        });
+            return ResponseEntity.ok(dbBin.get());
+        }
 
-        return dbBin.orElse(null);
+        return ResponseEntity.notFound().build();
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<BinEntity> updateBin(@PathVariable Long id, @RequestBody BinEntity updatedBin) {
         return binRepository.findById(id)
-            .map(bin -> {
-                bin.setLocationName(updatedBin.getLocationName());
-                bin.setFillLevel(updatedBin.getFillLevel());
-                bin.setStatus(updatedBin.getStatus());
-                bin.setType(updatedBin.getType());
-                binRepository.save(bin);
+                .map(bin -> {
+                    bin.setLocationName(updatedBin.getLocationName());
+                    bin.setFillLevel(updatedBin.getFillLevel());
+                    bin.setStatus(updatedBin.getStatus());
+                    bin.setType(updatedBin.getType());
+                    BinEntity saved = binRepository.save(bin);
 
-                // Update Redis cache if available
-                if (redisService != null) {
-                    redisService.saveBin(id, bin);
-                }
+                    if (redisService != null) {
+                        redisService.saveBin(id, saved);
+                    }
 
-                return ResponseEntity.ok(bin);
-            })
-            .orElse(ResponseEntity.notFound().build());
+                    return ResponseEntity.ok(saved);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }
