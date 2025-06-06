@@ -18,7 +18,8 @@ public class BinController {
     private final RedisService redisService;
 
     @Autowired
-    public BinController(BinRepository binRepository, RedisService redisService) {
+    public BinController(BinRepository binRepository,
+                         @Autowired(required = false) RedisService redisService) {
         this.binRepository = binRepository;
         this.redisService = redisService;
     }
@@ -27,23 +28,31 @@ public class BinController {
     public List<BinEntity> getAllBins() {
         List<BinEntity> dbBins = binRepository.findAll();
 
-        // Cache each bin individually
-        dbBins.forEach(bin -> redisService.saveBin(bin.getId(), bin));
+        // Cache each bin individually if Redis is available
+        if (redisService != null) {
+            dbBins.forEach(bin -> redisService.saveBin(bin.getId(), bin));
+        }
 
         return dbBins;
     }
 
     @GetMapping("/{id}")
     public BinEntity getBinById(@PathVariable Long id) {
-        // Check Redis first
-        BinEntity cached = redisService.getBin(id);
-        if (cached != null) return cached;
+        if (redisService != null) {
+            BinEntity cached = redisService.getBin(id);
+            if (cached != null) return cached;
+        }
 
-        // Otherwise, fallback to DB and cache it
         Optional<BinEntity> dbBin = binRepository.findById(id);
-        dbBin.ifPresent(bin -> redisService.saveBin(id, bin));
+        dbBin.ifPresent(bin -> {
+            if (redisService != null) {
+                redisService.saveBin(id, bin);
+            }
+        });
+
         return dbBin.orElse(null);
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<BinEntity> updateBin(@PathVariable Long id, @RequestBody BinEntity updatedBin) {
         return binRepository.findById(id)
@@ -53,8 +62,14 @@ public class BinController {
                 bin.setStatus(updatedBin.getStatus());
                 bin.setType(updatedBin.getType());
                 binRepository.save(bin);
+
+                // Update Redis cache if available
+                if (redisService != null) {
+                    redisService.saveBin(id, bin);
+                }
+
                 return ResponseEntity.ok(bin);
             })
             .orElse(ResponseEntity.notFound().build());
-}
+    }
 }
