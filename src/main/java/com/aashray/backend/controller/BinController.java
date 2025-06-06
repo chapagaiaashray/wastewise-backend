@@ -15,9 +15,8 @@ import java.util.Optional;
 public class BinController {
 
     private final BinRepository binRepository;
-    private final RedisService redisService;  // optional, may be null
+    private final RedisService redisService;  // Optional
 
-    // Allow RedisService to be optional
     @Autowired
     public BinController(BinRepository binRepository, @Autowired(required = false) RedisService redisService) {
         this.binRepository = binRepository;
@@ -25,31 +24,46 @@ public class BinController {
     }
 
     @GetMapping
-    public List<BinEntity> getAllBins() {
-        List<BinEntity> dbBins = binRepository.findAll();
+    public ResponseEntity<?> getAllBins() {
+        try {
+            List<BinEntity> dbBins = binRepository.findAll();
 
-        if (redisService != null) {
-            for (BinEntity bin : dbBins) {
-                redisService.saveBin(bin.getId(), bin);
+            if (redisService != null) {
+                for (BinEntity bin : dbBins) {
+                    try {
+                        redisService.saveBin(bin.getId(), bin);
+                    } catch (Exception e) {
+                        System.err.println("Failed to cache bin ID " + bin.getId() + ": " + e.getMessage());
+                    }
+                }
             }
-        }
 
-        return dbBins;
+            return ResponseEntity.ok(dbBins);
+        } catch (Exception e) {
+            e.printStackTrace(); // will show in Render logs
+            return ResponseEntity.internalServerError().body("Server error while fetching bins.");
+        }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<BinEntity> getBinById(@PathVariable Long id) {
-        // Try Redis cache
         if (redisService != null) {
-            BinEntity cached = redisService.getBin(id);
-            if (cached != null) return ResponseEntity.ok(cached);
+            try {
+                BinEntity cached = redisService.getBin(id);
+                if (cached != null) return ResponseEntity.ok(cached);
+            } catch (Exception e) {
+                System.err.println("Redis get failed for ID " + id + ": " + e.getMessage());
+            }
         }
 
-        // Fallback to DB
         Optional<BinEntity> dbBin = binRepository.findById(id);
         if (dbBin.isPresent()) {
             if (redisService != null) {
-                redisService.saveBin(id, dbBin.get());
+                try {
+                    redisService.saveBin(id, dbBin.get());
+                } catch (Exception e) {
+                    System.err.println("Redis save failed for ID " + id + ": " + e.getMessage());
+                }
             }
             return ResponseEntity.ok(dbBin.get());
         }
@@ -65,10 +79,15 @@ public class BinController {
                     bin.setFillLevel(updatedBin.getFillLevel());
                     bin.setStatus(updatedBin.getStatus());
                     bin.setType(updatedBin.getType());
+
                     BinEntity saved = binRepository.save(bin);
 
                     if (redisService != null) {
-                        redisService.saveBin(id, saved);
+                        try {
+                            redisService.saveBin(id, saved);
+                        } catch (Exception e) {
+                            System.err.println("Redis save failed during update for ID " + id + ": " + e.getMessage());
+                        }
                     }
 
                     return ResponseEntity.ok(saved);
