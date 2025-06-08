@@ -2,7 +2,7 @@
 
 This is the Spring Boot backend for **WasteWise**, a real-time smart waste bin monitoring system.
 
-- 🌍 Live Backend API: [https://wastewise-backend.onrender.com](https://wastewise-backend.onrender.com)
+- 🌍 Live Backend API: [https://wastewise-backend.onrender.com/api/bins](https://wastewise-backend.onrender.com/api/bins)
 - 🔌 WebSocket Endpoint: `wss://wastewise-backend.onrender.com/ws`
 
 ---
