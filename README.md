@@ -1,27 +1,31 @@
+# ♻️ WasteWise Backend
+
+This is the Spring Boot backend for **WasteWise**, a real-time smart waste bin monitoring system.
+
+- 🌍 Live Backend API: [https://wastewise-backend.onrender.com](https://wastewise-backend.onrender.com)
+- 🔌 WebSocket Endpoint: `wss://wastewise-backend.onrender.com/ws`
 
 ---
 
-## ✅ `backend/README.md`
+## 🚀 Features
 
-```markdown
-# WasteWise Backend ♻️
-
-This is the Spring Boot backend for **WasteWise**, a real-time smart waste bin monitoring platform.
-
-> 🛠️ Live Backend: [https://wastewise-backend.onrender.com](https://wastewise-backend.onrender.com)
-
-> 🔌 WebSocket Endpoint: `wss://wastewise-backend.onrender.com/ws`
+- RESTful API for bin data (CRUD operations)
+- WebSocket support with STOMP for real-time bin updates
+- Optional Redis caching with TTL
+- PostgreSQL-based persistence
+- Uptime monitoring via UptimeRobot (5-minute pings)
+- Ready for production with environment variable configuration
 
 ---
 
-## 📦 Tech Stack
+## ⚙️ Technologies Used
 
-- Java 17
-- Spring Boot (REST + WebSocket)
-- PostgreSQL
-- Redis (Optional Caching Layer)
-- STOMP + SockJS for Real-time updates
-- Deployed on Render
+- **Java 17**
+- **Spring Boot** (Web, Data JPA, WebSocket, Redis)
+- **PostgreSQL**
+- **Redis** (optional, not required for production)
+- **STOMP + SockJS**
+- **Deployed on Render**
 
 ---
 
